@@ -1,2 +1,2 @@
 # rendergang-mockup
-Fast
+Mockup of a fast rendering algorithm to be implemented in an FPGA
