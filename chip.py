@@ -1,9 +1,11 @@
-class Chip():
+from utils import *
+
+class Chip(Module):
     def __init__(self, swidth, sheight, scans):
-        pass
+        raise NotImplementedError()
 
     def clock(self):
-        pass
+        raise NotImplementedError()
 
 if __name__ == '__main__':
     pass
