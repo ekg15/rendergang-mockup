@@ -4,11 +4,51 @@ from myhdl import Simulation, Signal, delay, intbv, bin,\
 from fifo import ConstFIFO
 import random
 
-MAX_DELAY = 10
-WIDTH = 10
 random.seed(0)
 
+class TestSingleChannelMemory(unittest.TestCase):
+    def testInitialize(self):
+        """ Tests setting memory to a default value """
+        raise NotImplementedError()
+
+    def testSingleReadWrite(self):
+        """ Tests a single read write operation on the memory """
+        raise NotImplementedError()
+
+    def testManyReadWrite(self):
+        """ Tests many reads and writes """
+        raise NotImplementedError()
+
+    def testDelay(self):
+        """ Test that memory has appropriate latency """
+        raise NotImplementedError()
+
+    def runTests(self, test):
+        """ Helper function for memory tests """
+        raise NotImplementedError()
+
+class TestY1MemoryController(unittest.TestCase):
+    def testBlocking(self):
+        """ Verify that blocking works correctly """
+        raise NotImplementedError()
+
+    def testReset(self):
+        """ Test y1mc controller """
+        raise NotImplementedError()
+
+    def testRandomYs(self):
+        """ Test controller quashing with random Y values """
+        raise NotImplementedError()
+    
+    def runTests(self, test):
+        """ Helper function to run tests """
+        raise NotImplementedError()
+
+
 class TestConstFIFO(unittest.TestCase):
+    MAX_DELAY = 10
+    WIDTH = 10
+
     def testFIFOInvalid(self):
         """ Test no change in FIFO when never ready """
         def test(clock, reset,
