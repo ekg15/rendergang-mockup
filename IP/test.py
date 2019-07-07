@@ -9,9 +9,6 @@ from math import log2, ceil
 random.seed(0)
 
 class TestSingleChannelMemory(unittest.TestCase):
-    WIDTH = 10
-    SIZE = 1000
-
     def testInitialize(self):
         """ Tests setting memory to a default value """  
         def test(clock, reset, data_in, data_out, address, write, enable,
@@ -28,7 +25,7 @@ class TestSingleChannelMemory(unittest.TestCase):
                 clock.next = 1
                 yield delay(10)
 
-                self.assetEqual(int(data_out), init_data[loc])
+                self.assertEqual(int(data_out), init_data[loc])
                  
         self.runTests(test, 1)
 
@@ -90,12 +87,12 @@ class TestSingleChannelMemory(unittest.TestCase):
 
     def testDelay(self):
         """ Test that memory has appropriate latency and size """
-        delay = 3
+        d = 3
 
         def test(clock, reset, data_in, data_out, address, write, enable,
                 init_data, width, size):
             locs = [random.randrange(size) for i in range(5)]
-            pred_locs = [None]*delay
+            pred_locs = [None]*d
 
             for loc, ploc in zip(locs, pred_locs):
                 enable.next = True
@@ -111,21 +108,19 @@ class TestSingleChannelMemory(unittest.TestCase):
                 clock.next = 0
                 yield delay(10)
 
-            self.assertEqual(int(data_out), number)
-
-        self.runTests(test, delay)
+        self.runTests(test, d)
         
 
-    def runTests(self, test, delay):
+    def runTests(self, test, d):
         """ Helper function for memory tests """
-        for size in [1, 23, 1024, 10000]:
+        for size in [4, 23, 1024, 10000]:
             init_data = [random.randrange(2**WIDTH) for i in range(size)]
 
             clock = Signal(0)
             reset = ResetSignal(1, active=0, isasync=True)
 
             data_in = Signal(intbv()[WIDTH:])
-            data_out = Signal(inbv()[WIDTH:])
+            data_out = Signal(intbv()[WIDTH:])
 
             address = Signal(intbv()[ceil(log2(size)):])
             write = Signal(False)
@@ -134,7 +129,7 @@ class TestSingleChannelMemory(unittest.TestCase):
             test = test(clock, reset, data_in, data_out, address, write, enable,
                     init_data, WIDTH, size)
             dut = SChMemory(clock, reset, data_in, data_out, address, write, enable,
-                    delay, init_data, WIDTH, size, init_data)
+                    d, WIDTH, size, init_data)
 
             sim = Simulation(dut, test)
             sim.run(quiet = 1)
@@ -157,11 +152,9 @@ class TestY1MemoryController(unittest.TestCase):
         """ Helper function to run tests """
         raise NotImplementedError()
 
-
+MAX_DELAY = 10
+WIDTH = 10
 class TestConstFIFO(unittest.TestCase):
-    MAX_DELAY = 10
-    WIDTH = 10
-
     def testFIFOInvalid(self):
         """ Test no change in FIFO when never ready """
         def test(clock, reset,
