@@ -2,30 +2,143 @@ import unittest
 from myhdl import Simulation, Signal, delay, intbv, bin,\
         ResetSignal
 from fifo import ConstFIFO
+from memory import SChMemory
 import random
+from math import log2, ceil
 
 random.seed(0)
 
 class TestSingleChannelMemory(unittest.TestCase):
+    WIDTH = 10
+    SIZE = 1000
+
     def testInitialize(self):
-        """ Tests setting memory to a default value """
-        raise NotImplementedError()
+        """ Tests setting memory to a default value """  
+        def test(clock, reset, data_in, data_out, address, write, enable,
+                init_data, width, size):
+            enable.next = False
+
+            for loc in range(size):
+                clock.next = 0
+                yield delay(10)
+
+                address.next = loc
+                enable.next = True
+
+                clock.next = 1
+                yield delay(10)
+
+                self.assetEqual(int(data_out), init_data[loc])
+                 
+        self.runTests(test, 1)
 
     def testSingleReadWrite(self):
         """ Tests a single read write operation on the memory """
-        raise NotImplementedError()
+        def test(clock, reset, data_in, data_out, address, write, enable,
+                init_data, width, size):
+            number = random.randrange(2**WIDTH)
+            
+            enable.next = True
+            write.next = True
+            address.next = 0
+            data_in.next = number
+
+            clock.next = 1
+            yield delay(10)
+
+            clock.next = 0
+            yield delay(10)
+
+            write.next = False
+
+            clock.next = 1
+            yield delay(10)
+
+            self.assertEqual(int(data_out), number)
+
+        self.runTests(test, 1)
 
     def testManyReadWrite(self):
         """ Tests many reads and writes """
-        raise NotImplementedError()
+        def test(clock, reset, data_in, data_out, address, write, enable,
+                init_data, width, size):
+            for loc in [random.randrange(0, size) for i in range(size)]:
+                clock.next = 0
+                yield delay(10)
+                
+                number = random.randrange(2**WIDTH)
+            
+                enable.next = True
+                write.next = True
+                address.next = loc
+                data_in.next = number
+
+                clock.next = 1
+                yield delay(10)
+
+                clock.next = 0
+                yield delay(10)
+
+                write.next = False
+
+                clock.next = 1
+                yield delay(10)
+
+                self.assertEqual(int(data_out), number)
+
+        self.runTests(test, 1)
 
     def testDelay(self):
-        """ Test that memory has appropriate latency """
-        raise NotImplementedError()
+        """ Test that memory has appropriate latency and size """
+        delay = 3
 
-    def runTests(self, test):
+        def test(clock, reset, data_in, data_out, address, write, enable,
+                init_data, width, size):
+            locs = [random.randrange(size) for i in range(5)]
+            pred_locs = [None]*delay
+
+            for loc, ploc in zip(locs, pred_locs):
+                enable.next = True
+                address.next = loc
+
+                if ploc is not None:
+                    pval = init_data[ploc]
+                    self.assertEqual(int(data_in), pval)
+
+                clock.next = 1
+                yield delay(10)
+
+                clock.next = 0
+                yield delay(10)
+
+            self.assertEqual(int(data_out), number)
+
+        self.runTests(test, delay)
+        
+
+    def runTests(self, test, delay):
         """ Helper function for memory tests """
-        raise NotImplementedError()
+        for size in [1, 23, 1024, 10000]:
+            init_data = [random.randrange(2**WIDTH) for i in range(size)]
+
+            clock = Signal(0)
+            reset = ResetSignal(1, active=0, isasync=True)
+
+            data_in = Signal(intbv()[WIDTH:])
+            data_out = Signal(inbv()[WIDTH:])
+
+            address = Signal(intbv()[ceil(log2(size)):])
+            write = Signal(False)
+            enable = Signal(False)
+
+            test = test(clock, reset, data_in, data_out, address, write, enable,
+                    init_data, WIDTH, size)
+            dut = SChMemory(clock, reset, data_in, data_out, address, write, enable,
+                    delay, init_data, WIDTH, size, init_data)
+
+            sim = Simulation(dut, test)
+            sim.run(quiet = 1)
+
 
 class TestY1MemoryController(unittest.TestCase):
     def testBlocking(self):
